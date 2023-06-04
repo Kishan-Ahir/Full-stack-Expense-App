@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Expense Tracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.24.0/axios.min.js"></script>
+</head>
+
+<body>
+    <div class="container" style="margin-top: 10px;">
+        <div class="card">
+            <div class="card-body">
+                <div class="container">
+                    <div class="row">
+                        <div class="col">
+                            <div class="box">
+                                <h1 class="text-center"
+                                    style="background-color: lightsteelblue; border-radius: 6px;">ADD YOUR EXPENSES
+                                    HERE</h1>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <form>
+                                <div class="row">
+                                    <div class="col">
+                                        <div class="input-group">
+                                            <div class="input-group-text" style="background-color: lightyellow;">
+                                                <label class="form-label" for="productname">Product Name</label>
+                                            </div>
+                                            <input class="form-control" type="text" id="productname"
+                                                placeholder="Enter Product name here" required>
+                                        </div>
+                                        <div class="input-group" style="margin-top: 5px;">
+                                            <div class="input-group-text" style="background-color: lightyellow;">
+                                                <label class="form-label" for="productprice">Product Price</label>
+                                            </div>
+                                            <input class="form-control" type="text" id="productprice"
+                                                placeholder="Enter Product price here" required>
+                                        </div>
+                                        <div class="input-group" style="margin-top: 5px;">
+                                            <div class="input-group-text" style="background-color: lemonchiffon">
+                                                <label class="form-label">Type of Expense:</label>
+                                            </div>
+                                            <select class="form-select" id="producttype">
+                                                <option class="option">Fuel</option>
+                                                <option class="option">Food</option>
+                                                <option class="option">Travel</option>
+                                                <option class="option">Entertainment</option>
+                                                <option class="option">Study</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-outline-success btn-lg border-opacity-10" id="button"
+                                    style="margin-top: 5px; width: 100%;">Add Product</button>
+                                <div class="input-group" style="margin-top: 15px;">
+                                    <div class="input-group-text" style="background-color: lightyellow;">
+                                        <label class="form-label" for="totalamount">Total Value Worth of your
+                                            Products:</label>
+                                    </div>
+                                    <input type="text" class="form-control" id="totalamount" value="0" disabled>
+                                </div>
+                                <div class="input-group" style="margin-top: 15px;">
+                                    <div class="input-group-text" style="background-color: lightyellow;">
+                                        <label class="form-label" for="totalamount">Find your Product:</label>
+                                    </div>
+                                    <input type="text" class="form-control" id="findproduct">
+                                </div>
+                                <div style="margin-top: 15px;">
+                                    <ul class="list-group" id="productlist"></ul>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+<script>
+// Get the button element and the ul element
+let button = document.getElementById("button");
+let ul = document.getElementById("productlist");
+let findproduct = document.getElementById("findproduct");
+
+// Attach a click event listener to the button
+button.addEventListener("click", savedata);
+
+// Function to save expense data
+async function savedata(event) {
+    event.preventDefault();
+    try {
+        // Get the values from the input fields
+        let name = document.getElementById("productname").value;
+        let price = document.getElementById("productprice").value;
+        let type = document.getElementById("producttype").value;
+
+        // Create an object with the expense data
+        const expensesData = { name, price, type };
+
+        // Send a POST request to add the expense data
+        const expenses = await axios.post("http://localhost:3000/addexpenses", expensesData);
+
+        ul.innerHTML = "";
+        expenses.data.forEach((expense) => {
+            // Create a new li element
+            let li = document.createElement("li");
+            li.className = "list-group-item";
+
+            // Add a text node to the li element with the product details
+            li.appendChild(
+                document.createTextNode(
+                    "Product name is " +
+                    expense.Name +
+                    ". Product price is " +
+                    expense.Price +
+                    ". Product type is " +
+                    expense.Type_of_Expense
+                )
+            );
+
+            // Create a delete button
+            let deletebtn = document.createElement("button");
+            deletebtn.className = "btn btn-danger btn-sm delete";
+            deletebtn.setAttribute("style", "float: right;");
+            deletebtn.appendChild(document.createTextNode("X"));
+
+            // Append the delete button to the li element
+            li.appendChild(deletebtn);
+
+            // Create an edit button
+            let editbtn = document.createElement("button");
+            editbtn.className = "btn btn-dark btn-sm edit";
+            editbtn.setAttribute("style", "float: right; margin-right: 5px;");
+            editbtn.appendChild(document.createTextNode("Edit"));
+
+            // Append the edit button to the li element
+            li.appendChild(editbtn);
+
+            // Setting attribute to li tag
+            li.setAttribute("id", expense.id);
+
+            // Append the li element to the ul element
+            ul.appendChild(li);
+        });
+
+        return gettotalprice();
+    } catch (err) {
+        console.log("Not Able to send and retrieve expenses: " + err);
+    }
+}
+
+// Add a window load event listener to show the expense data initially
+window.addEventListener("load", showdata);
+
+// Function to show expense data
+async function showdata() {
+    try {
+        // Get the expense data from the server
+        const expenses = await axios.get("http://localhost:3000/getexpenses");
+        ul.innerHTML = "";
+        expenses.data.forEach((expense) => {
+            // Create a new li element
+            let li = document.createElement("li");
+            li.className = "list-group-item";
+
+            // Add a text node to the li element with the product details
+            li.appendChild(
+                document.createTextNode(
+                    "Product name is " +
+                    expense.Name +
+                    ". Product price is " +
+                    expense.Price +
+                    ". Product type is " +
+                    expense.Type_of_Expense
+                )
+            );
+
+            // Create a delete button
+            let deletebtn = document.createElement("button");
+            deletebtn.className = "btn btn-danger btn-sm delete";
+            deletebtn.setAttribute("style", "float: right;");
+            deletebtn.appendChild(document.createTextNode("X"));
+
+            // Append the delete button to the li element
+            li.appendChild(deletebtn);
+
+            // Create an edit button
+            let editbtn = document.createElement("button");
+            editbtn.className = "btn btn-dark btn-sm edit";
+            editbtn.setAttribute("style", "float: right; margin-right: 5px;");
+            editbtn.appendChild(document.createTextNode("Edit"));
+
+            // Append the edit button to the li element
+            li.appendChild(editbtn);
+
+            // Setting attribute to li tag
+            li.setAttribute("id", expense.id);
+
+            // Append the li element to the ul element
+            ul.appendChild(li);
+        });
+
+        return gettotalprice();
+    } catch {
+        console.log("Not able to retrieve data.");
+    }
+}
+
+// Delete button functionality
+ul.addEventListener("click", removeexpense);
+async function removeexpense(event) {
+    try {
+        if (event.target.classList.contains("delete")) {
+            let li = event.target.parentNode;
+            let id = li.getAttribute("id");
+            ul.removeChild(li);
+            const sum = await axios.delete(`http://localhost:3000/deleteexpenses/${id}`);
+            if (sum.data === null) {
+                document.getElementById("totalamount").value = 0;
+            } else {
+                document.getElementById("totalamount").value = sum.data;
+            }
+        }
+    } catch (err) {
+        console.log("Error happened while deleting: " + err);
+    }
+}
+
+// Edit button functionality
+ul.addEventListener("click", editexpense);
+async function editexpense(event) {
+    if (event.target.classList.contains("edit")) {
+        let li = event.target.parentNode;
+        let id = li.getAttribute("id");
+        document.getElementById("productname").value = li.firstChild.textContent.split(" is ")[1].split(".")[0];
+        document.getElementById("productprice").value = li.firstChild.textContent.split(" is ")[2].split(".")[0];
+        document.getElementById("producttype").value = li.firstChild.textContent.split(" is ")[3];
+        ul.removeChild(li);
+        const sum = await axios.delete(`http://localhost:3000/editexpenses/${id}`)
+        if (sum.data === null) {
+            document.getElementById("totalamount").value = 0;
+        } else {
+            document.getElementById("totalamount").value = sum.data;
+        }
+    }
+}
+
+// For Doing sum of all expense's price
+async function gettotalprice() {
+    try {
+        const sum = await axios.get("http://localhost:3000/sumofprices")
+        if (sum.data === null) {
+            document.getElementById("totalamount").value = 0;
+        } else {
+            document.getElementById("totalamount").value = sum.data;
+        }
+    } catch (err) {
+        console.log("Not able to get sum: " + err)
+    }
+}
+
+// Function to search products
+findproduct.addEventListener("keyup", searchproduct);
+function searchproduct() {
+    let li = document.querySelectorAll(".list-group-item");
+    li.forEach((product) => {
+        let productname = product.firstChild.textContent.split(" is ")[1].split(".")[0];
+        if ((productname.toLowerCase().indexOf(findproduct.value.toLowerCase())) === -1) {
+            product.style.display = "none";
+        } else {
+            product.style.display = "block";
+        }
+    });
+}
+</script>
+</body>
+</html>
